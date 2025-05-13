@@ -1,9 +1,10 @@
 import terminal
 import types
+import parsecfg
 
 proc showUsage*() =
   styledEcho fgCyan, """
-Usage: todo [options] <command> [<args>]
+Usage: todo [section=default] [options] <command> [<args>]
 Options:
   -h, --help                  Show this usage info
   -f, --file=<path>           Specify the markdown file path (overrides value in config)
@@ -34,8 +35,12 @@ proc exitIf*(condition: bool, errMsg: string, exitStatus: ExitStatus = error) =
     quit(exitCode) # TODO: improve exit codes?
 
 proc handleArgument*(state: var ParseState, key: string) =
-  # First argument sets command
+  # First argument either set section or command
   if state.command.len == 0:
+    for section in sections(state.config):
+      if section == key:
+        state.configSection = key
+        return
     state.command = key
     return
 
@@ -48,14 +53,7 @@ proc handleArgument*(state: var ParseState, key: string) =
     exitIf(true, state.command & " is not expecting an argument: " & key)
 
 proc handleOption*(state: var ParseState, key: string, val: string) =
-  # If "--" flag has been passed in, rest is args
-  if state.alwaysArgument: # TODO: Not a good way to handle since it will only keep key and not entire string
-    handleArgument(state, key)
-    return
-
   case key
-  of "": # -- flag
-    state.alwaysArgument = true
   of "h", "help":
     showUsage()
   of "f", "file":

@@ -1,10 +1,12 @@
+import parsecfg
+
 type
   ParseState* = object
     command*: string
     task*: string
     configSection*: string
     markdownFile*: string
-    configFile*: string
+    config*: Config
     alwaysArgument*: bool
 
 type
